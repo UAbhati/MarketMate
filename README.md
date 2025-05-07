@@ -17,7 +17,7 @@ MarketMate is a financial AI assistant chat interface built using a modern full-
 
 Before starting, ensure the following tools are installed:
 
-- [Java 21+](https://adoptium.net/)
+- [Java 11+](https://adoptium.net/)
 - [Node.js 18+](https://nodejs.org/)
 - [Docker Desktop](https://www.docker.com/products/docker-desktop) (with Docker Compose v2)
 - [Git](https://git-scm.com/)
@@ -43,7 +43,7 @@ This will:
 
 3. Visit the app:
 - Frontend: [http://localhost:3000](http://localhost:3000)
-- API Docs: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+- API Docs: [http://localhost:8080/swagger](http://localhost:8080/swagger)
 
 ## 🛠️ Manual Setup (If needed)
 
