@@ -1,12 +1,18 @@
 package com.marketmate.auth;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
@@ -14,22 +20,15 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
+
     @Autowired
     private JwtUtil jwtUtil;
 
-    @GetMapping("/")
-    public void redirectToLogin(HttpServletResponse response) throws IOException {
-        response.sendRedirect("/auth/login");
-    }
-
-    @GetMapping("/chat")
-    public String home() {
-        return "Welcome! You are logged in.";
-    }
-
-
+    @Operation(summary = "Register a new user")
+    @ApiResponse(responseCode = "200", description = "User registered successfully")
     @PostMapping("/register")
     public String register(@RequestBody User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -37,10 +36,14 @@ public class AuthController {
         return "User registered successfully";
     }
 
+    @Operation(summary = "Authenticate user and return JWT token")
+    @ApiResponse(responseCode = "200", description = "Login successful")
     @PostMapping("/login")
-    public Map<String, String> login(@RequestParam String email,
+    public Map<String, String> login(
+            @RequestParam String email,
             @RequestParam String password,
             HttpServletResponse response) {
+
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
@@ -49,12 +52,8 @@ public class AuthController {
                 return Map.of("token", token);
             }
         }
+
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         return Map.of("error", "Invalid credentials");
-    }
-
-    @GetMapping("/login")
-    public String loginRedirect() {
-        return "Please log in at /auth/login using POST.";
     }
 }
