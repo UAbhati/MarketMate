@@ -23,6 +23,8 @@ Thumbs.db
 
 # Environment
 .env
+.env.docker
+.env.remote
 
 # Misc
 *.iml

@@ -2,12 +2,13 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15
+    image: postgres:14
+    container_name: marketmate-postgres
     restart: always
     environment:
-      POSTGRES_DB: marketmate
-      POSTGRES_USER: marketmate_user
-      POSTGRES_PASSWORD: marketmate_pass
+      POSTGRES_USER: marketmate
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: marketmate_db
     ports:
       - "5432:5432"
     volumes:
@@ -15,10 +16,8 @@ services:
 
   backend:
     build: ./backend
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/marketmate
-      SPRING_DATASOURCE_USERNAME: marketmate_user
-      SPRING_DATASOURCE_PASSWORD: marketmate_pass
+    env_file:
+      - .env.docker
     ports:
       - "8080:8080"
     depends_on:

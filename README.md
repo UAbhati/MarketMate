@@ -50,7 +50,7 @@ This will:
 ### 1. Backend (Spring Boot)
 ```bash
 cd backend
-./gradlew build
+gradle build
 ```
 Update `application.yml` or use `.env` to connect to PostgreSQL.
 
