@@ -1,40 +1,39 @@
-import { Dispatch, SetStateAction, useState } from 'react';
+import React, { useState } from 'react';
+import axios from '../axios';
+import styles from './chatSearchInput.module.css';
 
-interface searchInputProps {
-  message: {
-        user: string;
-        bot: string;
-    }[];
-  setMessages: Dispatch<SetStateAction<{ user: string; bot: string; }[]>>;
-}
+export default function ChatSearchInput({
+  message,
+  setMessages
+}: {
+  message: { user: string; bot: string }[];
+  setMessages: (messages: { user: string; bot: string }[]) => void;
+}) {
+  const [query, setQuery] = useState('');
 
-export default function ChatSearchInput({ message, setMessages }: searchInputProps ) {
-    const [input, setInput] = useState('');
-    const handleSend = () => {
-        if (!input.trim()) return;
-        // Mock response for now
-        const userMsg = input;
-        const botReply = `This is a response to: "${input}"`;
-        setMessages((prev) => [...prev, { user: userMsg, bot: botReply }]);
-        setInput('');
-    };
+  const sendMessage = async () => {
+    if (!query.trim()) return;
 
-    return (
-        <div className="p-4 border-t bg-white flex gap-2">
-            <input
-                type="text"
-                placeholder="Ask something..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="flex-1 px-4 py-2 border rounded"
-                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            />
-            <button
-                onClick={handleSend}
-                className="bg-blue-600 text-white px-4 rounded hover:bg-blue-700"
-            >
-                Send
-            </button>
-        </div>
-    );
+    const userMsg = { user: query, bot: '...' };
+    setMessages([...message, userMsg]);
+
+    // simulate bot or call API
+    const response = await axios.post('/api/chat', { query });
+    const botReply = response.data.answer || 'No response';
+
+    setMessages([...message, { user: query, bot: botReply }]);
+    setQuery('');
+  };
+
+  return (
+    <div className={styles.searchInput}>
+      <input
+        type="text"
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Ask something..."
+      />
+      <button onClick={sendMessage}>Send</button>
+    </div>
+  );
 }

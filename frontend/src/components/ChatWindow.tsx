@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from '../axios';
+import styles from './chatWindow.module.css';
 
 interface Message {
   id?: number;
@@ -9,32 +10,36 @@ interface Message {
 
 export default function ChatWindow({ sessionId }: { sessionId: number }) {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState('');
 
   useEffect(() => {
-    axios.get(`/api/chat/messages/${sessionId}`)
-      .then(res => setMessages(res.data))
-      .catch(console.error);
+    if (sessionId) {
+      axios.get(`/api/chat/messages/${sessionId}`)
+        .then(res => setMessages(res.data))
+        .catch(console.error);
+    }
   }, [sessionId]);
 
-  const sendMessage = async () => {
-    const newMsg: Message = { role: 'user', content: input };
-    await axios.post(`/api/chat/messages/${sessionId}`, newMsg);
-    setMessages([...messages, newMsg]);
-    setInput('');
-  };
+  if (!sessionId) {
+    return <div className={styles.window}><p className={styles.welcome}>👋 Welcome to MarketMate! Start a new chat to begin.</p></div>;
+  }
 
   return (
-    <div className="chat-window">
-      <div className="messages">
-        {messages.map((m, i) => (
-          <div key={i} className={m.role}>{m.content}</div>
-        ))}
-      </div>
-      <div className="input">
-        <input value={input} onChange={e => setInput(e.target.value)} placeholder="Type a message" />
-        <button onClick={sendMessage}>Send</button>
-      </div>
+    <div className={styles.window}>
+      {messages.length === 0 && (
+        <div className={styles.welcome}>
+          👋 Start typing your question to begin the chat!
+        </div>
+      )}
+      {messages.map((m, i) => (
+        <div
+          key={i}
+          className={`${styles.message} ${
+            m.role === 'user' ? styles['user-message'] : styles['bot-message']
+          }`}
+        >
+          {m.content}
+        </div>
+      ))}
     </div>
   );
 }

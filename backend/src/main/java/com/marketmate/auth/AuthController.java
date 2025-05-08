@@ -1,6 +1,5 @@
 package com.marketmate.auth;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,7 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
+import com.marketmate.repository.UserRepository;
+
 import java.util.Map;
 import java.util.Optional;
 
