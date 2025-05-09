@@ -2,6 +2,7 @@ package com.marketmate.controller;
 
 import com.marketmate.entity.ChatMessage;
 import com.marketmate.entity.ChatSession;
+import com.marketmate.model.APIResponse;
 import com.marketmate.repository.ChatSessionRepository;
 import com.marketmate.service.ChatService;
 import com.marketmate.service.RateLimitService;
@@ -60,7 +61,8 @@ public class ChatController {
             @RequestParam UUID sessionId,
             @RequestParam String message,
             @RequestParam String model,
-            @RequestParam String tier) {
+            @RequestParam String tier
+    ) {
         ChatSession session = sessionRepo.findById(sessionId)
           .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (!session.getUserId().equals(getCurrentUserId())) {
@@ -68,7 +70,12 @@ public class ChatController {
         }
 
         // 2) enforce RPM
-        rateLimitService.checkRateLimit(getCurrentUserId());
+        rateLimitService.checkAllLimits(
+            getCurrentUserId(),
+            model,
+            1,
+            2
+        );
         // 3) delegate to service, which already uses the stored system message +
         // history
         String aiReplyContent = chatService.handleMessage(sessionId, 

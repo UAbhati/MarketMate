@@ -23,15 +23,17 @@ public class ChatSession {
 
     @Column(nullable = false)
     private String userId;
+
     @Column(nullable = false)
     private String title;
+
     @Column(columnDefinition = "TEXT")
     private String summary;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    @OneToMany(mappedBy="session", cascade=CascadeType.ALL, orphanRemoval=true)
+    @OneToMany(mappedBy="session", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
     @JsonManagedReference
     private List<ChatMessage> messages = new ArrayList<>();
 

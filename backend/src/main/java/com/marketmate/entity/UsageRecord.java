@@ -1,7 +1,12 @@
 package com.marketmate.entity;
 
 import javax.persistence.*;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.Optional;
 
 @Entity
 @Table(name = "usage_record")
@@ -19,9 +24,14 @@ public class UsageRecord {
 
     private Instant lastUsed;
 
+    private LocalDate date; // resets daily
+    private int requestsToday;
+    private int tokensToday;
+    private int minuteOfDay; // e.g. hour*60 + minute
+    private int tokensThisMinute;
+
     // No‐arg constructor for JPA
-    public UsageRecord() {
-    }
+    public UsageRecord() {}
 
     // Convenience constructor
     public UsageRecord(String userId, String model, String tier) {
@@ -31,6 +41,10 @@ public class UsageRecord {
         this.requestCount = 0;
         this.tokenCount = 0;
         this.lastUsed = Instant.now();
+    }
+
+    public interface UsageRecordRepository extends JpaRepository<UsageRecord,Long> {
+        Optional<UsageRecord> findByUserIdAndModelName(String userId, String modelName);
     }
 
     // Getters & setters
@@ -87,6 +101,45 @@ public class UsageRecord {
         this.lastUsed = lastUsed;
     }
 
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
+    public int getRequestsToday() {
+        return requestsToday;
+    }
+
+    public void setRequestsToday(int requestsToday) {
+        this.requestsToday = requestsToday;
+    }
+
+    public int getTokensToday() {
+        return tokensToday;
+    }
+
+    public void setTokensToday(int tokensToday) {
+        this.tokensToday = tokensToday;
+    }
+    
+    public int getMinuteOfDay() {
+        return minuteOfDay;
+    }
+
+    public void setMinuteOfDay(int minuteOfDay) {
+        this.minuteOfDay = minuteOfDay;
+    }
+    
+    public int getTokensThisMinute() {
+        return tokensThisMinute;
+    }
+
+    public void setTokensThisMinute(int tokensThisMinute) {
+        this.tokensThisMinute = tokensThisMinute;
+    }
     // Helpers to bump counts
     public void incrementRequestCount() {
         this.requestCount++;

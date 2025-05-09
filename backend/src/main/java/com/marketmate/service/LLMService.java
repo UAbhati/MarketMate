@@ -20,7 +20,7 @@ public class LLMService {
      * @param model   the name of the model to invoke
      * @return a fully‐populated APIResponse
      */
-    public APIResponse ask(List<ChatMessage> context, String model) {
+    public APIResponse askLLM(List<ChatMessage> context, String model) {
         // pull the session out of one of your context messages
         ChatSession session = context.get(0).getSession();
         // the user prompt was the last item in context

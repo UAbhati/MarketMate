@@ -58,7 +58,6 @@ public class ChatService {
             String prompt,
             String model,
             String tier) {
-
         // 1) load & authorize session
         ChatSession session = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown session"));
@@ -67,7 +66,7 @@ public class ChatService {
         }
 
         // 2) rate limit
-        rateLimitService.checkRateLimit(userId);
+        rateLimitService.checkAllLimits(userId, model, 1, 2);
 
         // 3) history → system window
         List<ChatMessage> history = messageRepo.findBySession_IdOrderByCreatedAtAsc(sessionId);
@@ -77,7 +76,7 @@ public class ChatService {
         context.addAll(financialDataService.getContext(prompt));
 
         // 5) call LLM
-        APIResponse llmResp = llmService.ask(context, model);
+        APIResponse llmResp = llmService.askLLM(context, model);
 
         String answer = llmResp.getMessage().getContent();
 
