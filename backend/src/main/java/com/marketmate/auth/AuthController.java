@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import com.marketmate.repository.UserRepository;
-
 import java.util.Map;
 import java.util.Optional;
 

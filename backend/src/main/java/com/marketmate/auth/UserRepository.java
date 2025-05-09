@@ -1,8 +1,6 @@
-package com.marketmate.repository;
+package com.marketmate.auth;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import com.marketmate.auth.User;
 
 import java.util.Optional;
 

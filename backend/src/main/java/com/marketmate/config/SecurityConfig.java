@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.Collections;
@@ -39,12 +40,15 @@ public class SecurityConfig {
             .csrf().disable() // disable CSRF for API
             .cors().and()
             .authorizeHttpRequests()
-            .antMatchers("/auth/**").permitAll()
+            .requestMatchers(new AntPathRequestMatcher("/auth/**"),
+                new AntPathRequestMatcher("/swagger-ui/**"),
+                new AntPathRequestMatcher("/v3/api-docs/**"))
+            .permitAll()
             .anyRequest().authenticated()
             .and()
-            .exceptionHandling().authenticationEntryPoint(jwtAuthEntryPoint)
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
-            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            .exceptionHandling().authenticationEntryPoint(jwtAuthEntryPoint);
 
             http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

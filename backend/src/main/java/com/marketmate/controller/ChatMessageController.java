@@ -32,7 +32,6 @@ public class ChatMessageController {
 
     @GetMapping("/{sessionId}")
     public List<ChatMessage> getMessages(@PathVariable Long sessionId) {
-        Optional<ChatSession> sessionOpt = chatSessionRepository.findById(sessionId);
-        return sessionOpt.map(ChatSession::getMessages).orElseThrow(() -> new RuntimeException("Session not found"));
+        return chatMessageRepository.findBySession_Id(sessionId);
     }
 }

@@ -7,6 +7,8 @@ import com.marketmate.service.ChatService;
 import com.marketmate.service.FinancialDataService;
 import com.marketmate.service.RateLimitService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -27,7 +29,9 @@ public class ChatController {
     private FinancialDataService financialDataService;
 
     @PostMapping
-    public APIResponse chat(@RequestParam String userId, @RequestBody APIRequest request) {
+    public APIResponse chat(@AuthenticationPrincipal UserDetails user,
+                        @RequestBody APIRequest request) {
+        String userId = user.getUsername();
         if (rateLimitService.isRateLimitExceeded(userId)) {
             ChatMessage error = new ChatMessage();
             error.setRole("system");
