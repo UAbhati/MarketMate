@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -38,15 +39,16 @@ public class ChatSessionController {
     }
 
     @Operation(summary = "Create a new chat session (authenticated)")
+    @Transactional
     @PostMapping
     public ChatSession createSession(@RequestParam String title) {
         String userId = currentUserId();
 
         ChatSession session = new ChatSession(userId, title);
-        session.setId(UUID.randomUUID());
-        session.setUserId(userId);
-        session.setTitle(title);
         repo.save(session);
+
+        System.out.println("Session ID before saving message: " + session.getId());
+        System.out.println("Is session present in DB? " + repo.existsById(session.getId()));
 
         // ** NEW: seed the system prompt **
         ChatMessage systemMessage = new ChatMessage();

@@ -1,4 +1,3 @@
-// src/main/java/com/marketmate/service/ChatService.java
 package com.marketmate.service;
 
 import com.marketmate.entity.ChatMessage;
@@ -10,6 +9,7 @@ import com.marketmate.util.ContextBuilder;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -49,68 +49,48 @@ public class ChatService {
     }
 
     /**
-     * Handles an incoming user message, injects system & financial context,
-     * enforces rate‐limits, calls the LLM, persists both user & assistant
-     * messages and records usage.
+     * Builds full message context and calls the LLM, returning APIResponse (with
+     * token counts).
+     * Does NOT save messages or usage.
      */
-    public String handleMessage(UUID sessionId,
-            String userId,
-            String prompt,
-            String model,
-            String tier) {
-        // 1) load & authorize session
+    public APIResponse buildContextAndCallLLM(UUID sessionId, String userId, String prompt, String model) {
         ChatSession session = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown session"));
+
         if (!session.getUserId().equals(userId)) {
             throw new SecurityException("Not your session");
         }
 
-        // 2) rate limit
-        rateLimitService.checkRateLimit(userId);
-
-        // 3) history → system window
         List<ChatMessage> history = messageRepo.findBySession_IdOrderByCreatedAtAsc(sessionId);
         List<ChatMessage> context = ContextBuilder.buildWindow(session, history);
-
-        // 4) add financial‐data context
         context.addAll(financialDataService.getContext(prompt));
 
-        // 5) call LLM
-        APIResponse llmResp = llmService.askLLM(context, model);
-
-        String answer = llmResp.getMessage().getContent();
-
-        // 6) persist the two messages
-        saveMessagesAsync(session, prompt, answer);
-
-        // 7) record usage
-        usageTracker.recordUsage(
-                userId,
-                model,
-                tier,
-                llmResp.getPromptTokens(),
-                llmResp.getCompletionTokens());
-
-        return answer;
+        return llmService.askLLM(context, model);
     }
 
     /**
-     * Returns the raw APIResponse (with tokens) but doesn’t persist messages or
-     * record usage.
+     * Persists user and assistant messages, and records usage statistics.
      */
-    public APIResponse getLLMResponse(
-            UUID sessionId,
+    @Transactional
+    public void saveMessagesAndTrack(
+            ChatSession session,
             String userText,
+            String aiText,
+            String userId,
             String model,
-            String tier
-    ) {
-        ChatSession session = sessionRepo.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Unknown session"));
+            String tier,
+            int promptTokens,
+            int completionTokens) {
 
-        List<ChatMessage> history = messageRepo.findBySession_IdOrderByCreatedAtAsc(sessionId);
-        var context = ContextBuilder.buildWindow(session, history);
-        context.addAll(financialDataService.getContext(userText));
+        // Save user message
+        ChatMessage userMsg = new ChatMessage(session, "user", userText);
+        messageRepo.save(userMsg);
 
-        return llmService.askLLM(context, model);
+        // Save assistant message
+        ChatMessage aiMsg = new ChatMessage(session, "assistant", aiText);
+        messageRepo.save(aiMsg);
+
+        // Record token usage
+        usageTracker.recordUsage(userId, model, tier, promptTokens, completionTokens);
     }
 }

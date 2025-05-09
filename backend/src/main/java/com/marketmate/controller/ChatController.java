@@ -6,6 +6,7 @@ import com.marketmate.model.APIResponse;
 import com.marketmate.repository.ChatSessionRepository;
 import com.marketmate.service.ChatService;
 import com.marketmate.service.RateLimitService;
+import com.marketmate.util.FinancialRelatedQuestions;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -26,11 +27,11 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("/api/chat")
 public class ChatController {
-
     @Autowired
     private ChatService chatService;
     @Autowired private RateLimitService rateLimitService;
     @Autowired private ChatSessionRepository sessionRepo;
+    private FinancialRelatedQuestions financialRelatedQuestions;
 
      @Operation(
         summary = "Send a message to the current session",
@@ -69,7 +70,14 @@ public class ChatController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        APIResponse aiResp = chatService.getLLMResponse(sessionId, message, model, tier);
+        if (!financialRelatedQuestions.isFinancialQuery(message.toLowerCase())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Please ask only financial-market-related questions.");
+        }
+
+        // 1. Build context and call LLM
+        APIResponse aiResp = chatService.buildContextAndCallLLM(
+                sessionId, getCurrentUserId(), message, model);
         // 2) enforce RPM
         rateLimitService.checkAllLimits(
             getCurrentUserId(),
@@ -77,17 +85,18 @@ public class ChatController {
             aiResp.getPromptTokens(),
             aiResp.getCompletionTokens()
         );
-        // 3) delegate to service, which already uses the stored system message +
-        // history
-        String aiReplyContent = chatService.handleMessage(sessionId, 
-                getCurrentUserId(), message,
-                model, tier);
-        // The chatService returns just the AI reply text for the prompt.
+        // 3. Save messages + usage
+        chatService.saveMessagesAndTrack(
+                session,
+                message,
+                aiResp.getMessage().getContent(),
+                getCurrentUserId(),
+                model,
+                tier,
+                aiResp.getPromptTokens(),
+                aiResp.getCompletionTokens());
 
-        // Return the AI reply as a ChatMessage object (or create a DTO)
-        ChatMessage aiMessage = new ChatMessage(null, "assistant", aiReplyContent);
-        // Note: session is null here to avoid including session data in JSON response
-        return aiMessage;
+        return aiResp.getMessage();
     }
 
     private String getCurrentUserId() {
