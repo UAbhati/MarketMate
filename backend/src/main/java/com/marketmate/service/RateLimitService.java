@@ -26,4 +26,8 @@ public class RateLimitService {
         Tier tier = getUserTier(userId);
         return false; // Assume no limit exceeded for now
     }
+
+    public void checkLimits(String userId, String model, String tier, String prompt) {
+        // Basic check stub
+    }
 }

@@ -1,15 +1,25 @@
 package com.marketmate.entity;
 
+import java.time.Instant;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "chat_messages")
 public class ChatMessage {
+    public ChatMessage(ChatSession session, String role, String content) {
+        this.session = session;
+        this.role = role;
+        this.content = content;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String role;
+
+    private Instant createdAt;
 
     @Column(columnDefinition = "TEXT")
     private String content;
@@ -47,4 +57,7 @@ public class ChatMessage {
         this.session = session;
     }
 
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }

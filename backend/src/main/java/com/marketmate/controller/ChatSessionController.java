@@ -2,36 +2,46 @@ package com.marketmate.controller;
 
 import com.marketmate.entity.ChatSession;
 import com.marketmate.repository.ChatSessionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.List;
 
 @RestController
-@RequestMapping("/chat/sessions")
+@RequestMapping("/api/sessions")
 public class ChatSessionController {
 
-    @Autowired
-    private ChatSessionRepository chatSessionRepository;
+    private final ChatSessionRepository repo;
 
-    @GetMapping
-    public List<ChatSession> getSessions(@AuthenticationPrincipal UserDetails user) {
-        return chatSessionRepository.findByUserId(user.getUsername());
+    public ChatSessionController(ChatSessionRepository repo) {
+        this.repo = repo;
     }
 
-    @GetMapping("/{sessionId}")
-    public Optional<ChatSession> getSession(@PathVariable Long sessionId) {
-        return chatSessionRepository.findById(sessionId);
-    }
-
+    @Operation(summary = "Create new chat session")
     @PostMapping
-    public ChatSession createSession(@AuthenticationPrincipal UserDetails user,
-                                    @RequestParam String title) {
+    public ChatSession create(@AuthenticationPrincipal UserDetails user, @RequestParam String title) {
         ChatSession session = new ChatSession();
         session.setUserId(user.getUsername());
         session.setTitle(title);
-        return chatSessionRepository.save(session);
+        return repo.save(session);
+    }
+
+    @Operation(summary = "Get current user's chat sessions")
+    @GetMapping
+    public List<ChatSession> getMySessions(@AuthenticationPrincipal UserDetails user) {
+        return repo.findByUserId(user.getUsername());
+    }
+
+    @Operation(summary = "Get a single session by ID")
+    @GetMapping("/{id}")
+    public ChatSession getSession(@PathVariable Long id,
+            @AuthenticationPrincipal UserDetails user) {
+        ChatSession session = repo.findById(id).orElseThrow();
+        if (!session.getUserId().equals(user.getUsername())) {
+            throw new RuntimeException("Unauthorized");
+        }
+        return session;
     }
 }

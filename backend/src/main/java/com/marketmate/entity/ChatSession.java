@@ -16,6 +16,8 @@ public class ChatSession {
 
     private Date createdAt = new Date();
 
+    private String summary;
+
     @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ChatMessage> messages = new ArrayList<>();
 
@@ -52,4 +54,7 @@ public class ChatSession {
         this.messages = messages;
     }
 
+    public String getSummary() {
+        return summary;
+    }
 }
