@@ -54,6 +54,19 @@ public class RateLimitService {
     }
 
     /** Throws if the user has exhausted their RPM allowance. */
+    public void checkRateLimit(String userId) {
+        Tier tier = getUserTier(userId);
+        // one RateLimiter per user
+        RateLimiter rl = limiters.computeIfAbsent(userId, id ->
+        // convert RPM → permits per second:
+        RateLimiter.create(tier.rpm / 60.0));
+        if (!rl.tryAcquire()) {
+            throw new RateLimitExceededException(
+                    "Rate limit exceeded. Allowed " + tier.rpm + " requests per minute.");
+        }
+    }
+
+    /** Throws if the user has exhausted their RPM allowance. */
     public void checkAllLimits(
         String userId,
         String model,

@@ -66,7 +66,7 @@ public class ChatService {
         }
 
         // 2) rate limit
-        rateLimitService.checkAllLimits(userId, model, 1, 2);
+        rateLimitService.checkRateLimit(userId);
 
         // 3) history → system window
         List<ChatMessage> history = messageRepo.findBySession_IdOrderByCreatedAtAsc(sessionId);
@@ -92,5 +92,25 @@ public class ChatService {
                 llmResp.getCompletionTokens());
 
         return answer;
+    }
+
+    /**
+     * Returns the raw APIResponse (with tokens) but doesn’t persist messages or
+     * record usage.
+     */
+    public APIResponse getLLMResponse(
+            UUID sessionId,
+            String userText,
+            String model,
+            String tier
+    ) {
+        ChatSession session = sessionRepo.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown session"));
+
+        List<ChatMessage> history = messageRepo.findBySession_IdOrderByCreatedAtAsc(sessionId);
+        var context = ContextBuilder.buildWindow(session, history);
+        context.addAll(financialDataService.getContext(userText));
+
+        return llmService.askLLM(context, model);
     }
 }

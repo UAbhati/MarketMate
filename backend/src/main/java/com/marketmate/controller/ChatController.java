@@ -69,12 +69,13 @@ public class ChatController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
+        APIResponse aiResp = chatService.getLLMResponse(sessionId, message, model, tier);
         // 2) enforce RPM
         rateLimitService.checkAllLimits(
             getCurrentUserId(),
             model,
-            1,
-            2
+            aiResp.getPromptTokens(),
+            aiResp.getCompletionTokens()
         );
         // 3) delegate to service, which already uses the stored system message +
         // history
