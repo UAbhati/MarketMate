@@ -46,3 +46,145 @@
   flex-direction: column;
   overflow-y: auto;
 }
+
+/* header */
+.header {
+  background-color: #fff;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+}
+
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+select {
+  padding: 0.4rem 0.6rem;
+}
+
+button {
+  padding: 0.4rem 0.8rem;
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* chatWindow */
+.window {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.message {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  max-width: 80%;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.user-message {
+  background-color: #dbeafe;
+  align-self: flex-end;
+  margin-left: auto;
+  text-align: right;
+}
+
+.bot-message {
+  background-color: #f0fdf4;
+  align-self: flex-start;
+}
+
+.system-message {
+  background-color: #fef9c3;
+  align-self: center;
+  font-style: italic;
+  text-align: center;
+}
+
+.timestamp {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.25rem;
+  text-align: right;
+}
+
+.loading {
+  text-align: center;
+  color: #555;
+  font-style: italic;
+  margin-bottom: 1rem;
+}
+
+/* chatsidebar */
+.sidebar {
+  width: 220px;
+  background-color: #fff;
+  border-right: 1px solid #e0e0e0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h3 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.session-button {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  text-align: left;
+  border: none;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.session-button.active {
+  background-color: #3182ce;
+  color: white;
+}
+
+/* chatseach input */
+.searchInput {
+  display: flex;
+  padding: 1rem;
+  background-color: white;
+  border-top: 1px solid #e0e0e0;
+}
+
+.searchInput input {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.searchInput button {
+  margin-left: 0.75rem;
+  background-color: #3182ce;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.searchInput button:hover {
+  background-color: #2b6cb0;
+}

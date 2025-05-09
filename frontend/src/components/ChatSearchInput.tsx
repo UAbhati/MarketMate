@@ -1,28 +1,39 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from '../axios';
-import styles from './chatSearchInput.module.css';
+import styles from '../pages/chat.module.css';
+import { Message } from '../pages/Chat';
 
-export default function ChatSearchInput({
-  message,
-  setMessages
-}: {
-  message: { user: string; bot: string }[];
-  setMessages: (messages: { user: string; bot: string }[]) => void;
-}) {
+interface Props {
+  sessionId: number | null;
+  onMessageAdded: (message: Message) => void;
+  model: string;
+  tier: string;
+}
+
+export default function ChatSearchInput({ sessionId, onMessageAdded, model, tier }: Props) {
   const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const sendMessage = async () => {
-    if (!query.trim()) return;
+    if (!query.trim() || !sessionId) return;
 
-    const userMsg = { user: query, bot: '...' };
-    setMessages([...message, userMsg]);
+    onMessageAdded({ role: 'user', content: query });
+    setLoading(true);
 
-    // simulate bot or call API
-    const response = await axios.post('/api/chat', { query });
-    const botReply = response.data.answer || 'No response';
-
-    setMessages([...message, { user: query, bot: botReply }]);
-    setQuery('');
+    try {
+      const response = await axios.post(`/api/sessions/${sessionId}`, {
+        message: query,
+        model,
+        tier,
+      });
+      const aiReply = response.data.content || 'No response';
+      onMessageAdded({ role: 'assistant', content: aiReply });
+    } catch (err) {
+      onMessageAdded({ role: 'assistant', content: '⚠️ Failed to get response.' });
+    } finally {
+      setQuery('');
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,10 +41,12 @@ export default function ChatSearchInput({
       <input
         type="text"
         value={query}
-        onChange={e => setQuery(e.target.value)}
+        onChange={(e) => setQuery(e.target.value)}
         placeholder="Ask something..."
       />
-      <button onClick={sendMessage}>Send</button>
+      <button onClick={sendMessage} disabled={loading || !sessionId}>
+        {loading ? '...' : 'Send'}
+      </button>
     </div>
   );
 }

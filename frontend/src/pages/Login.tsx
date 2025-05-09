@@ -7,49 +7,57 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
     try {
-      const response = await axios.post('/api/auth/login', null, {
+      console.log("Login: ",email, password);
+      const response = await axios.post('/auth/login', null, {
         params: { email, password }
       });
       const { token } = response.data;
       localStorage.setItem('token', token);
-      navigate('/chat');
-    } catch (err) {
-      setError('Invalid credentials');
+      
+      navigate('/new-chat');
+    } catch (err: any) {
+      console.log(err.message);
+      setError('Invalid credentials. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <form onSubmit={handleSubmit} className="p-6 w-80 bg-white rounded shadow">
-        <h2 className="text-xl font-bold mb-4 text-center">Login</h2>
-        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+    <div className="auth-container">
+      <form onSubmit={handleSubmit} className="auth-form">
+        <h2 className="text-xl font-bold text-center mb-4">Login</h2>
+        {error && <p className="auth-error">{error}</p>}
         <input
           type="email"
-          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-3 py-2 border rounded mb-3"
+          placeholder="Email"
+          className="auth-input"
           required
         />
         <input
           type="password"
-          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full px-3 py-2 border rounded mb-4"
+          placeholder="Password"
+          className="auth-input"
           required
         />
-        <button type="submit" className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600">
-          Login
+        <button type="submit" className="auth-button" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
         </button>
-      <button
+        <button
           type="button"
           onClick={() => navigate('/register')}
-          className="w-full mt-3 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300"
+          className="auth-secondary-button"
         >
           Register
         </button>

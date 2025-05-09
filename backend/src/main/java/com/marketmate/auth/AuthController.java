@@ -41,7 +41,6 @@ public class AuthController {
             @RequestParam String email,
             @RequestParam String password,
             HttpServletResponse response) {
-
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
