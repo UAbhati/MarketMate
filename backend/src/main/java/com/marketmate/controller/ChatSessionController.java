@@ -54,18 +54,32 @@ public class ChatSessionController {
         return repo.findByUserId(userId);
     }
 
-    @Operation(summary = "Fetch a single session by UUID (authenticated)")
-    @GetMapping("/{id}")
-    public ChatSession getSession(@PathVariable UUID id) {
-        String userId = currentUserId();
+    // @Operation(summary = "Fetch a single session by UUID (authenticated)")
+    // @GetMapping("/{id}")
+    // public ChatSession getSession(@PathVariable UUID id) {
+    //     String userId = currentUserId();
 
+    //     ChatSession session = repo.findById(id)
+    //             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+    //     if (!session.getUserId().equals(userId)) {
+    //         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your session");
+    //     }
+
+    //     return session;
+    // }
+
+    @Operation(summary = "Fetch a single session along with its messages by UUID (authenticated)")
+    @GetMapping("/{id}")
+    public ChatSession getSessionWithMessages(@PathVariable UUID id) {
+        String userId = currentUserId();
         ChatSession session = repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
         if (!session.getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your session");
         }
-
-        return session;
+        // Ensure messages are loaded (e.g., by JPA fetch or manually loading)
+        session.getMessages().size(); // force lazy load if necessary
+        return session; // Jackson will serialize messages list but not the back-reference to session
     }
 }

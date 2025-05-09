@@ -1,5 +1,6 @@
 package com.marketmate.controller;
 
+import com.marketmate.entity.ChatMessage;
 import com.marketmate.service.ChatService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,7 +47,7 @@ public class ChatController {
     )
     @ApiResponse(responseCode = "200", description = "Assistant reply returned")
     @PostMapping
-    public String ask(
+    public ChatMessage ask(
             @Parameter(hidden = true)
             @AuthenticationPrincipal 
             UserDetails user,
@@ -53,7 +55,16 @@ public class ChatController {
             @RequestParam String message,
             @RequestParam String model,
             @RequestParam String tier) {
-        return chatService.handleMessage(sessionId, getCurrentUserId(), message, model, tier);
+        // Process the user message and get AI reply
+        String aiReplyContent = chatService.handleMessage(sessionId, 
+                getCurrentUserId(), message,
+                model, tier);
+        // The chatService returns just the AI reply text for the prompt.
+
+        // Return the AI reply as a ChatMessage object (or create a DTO)
+        ChatMessage aiMessage = new ChatMessage(null, "assistant", aiReplyContent);
+        // Note: session is null here to avoid including session data in JSON response
+        return aiMessage;
     }
 
     private String getCurrentUserId() {

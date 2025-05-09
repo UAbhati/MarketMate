@@ -7,6 +7,8 @@ import com.marketmate.model.APIResponse;
 import com.marketmate.repository.ChatMessageRepository;
 import com.marketmate.repository.ChatSessionRepository;
 import com.marketmate.util.ContextBuilder;
+
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -34,6 +36,16 @@ public class ChatService {
         this.financialDataService = financialDataService;
         this.llmService = llmService;
         this.usageTracker = usageTracker;
+    }
+
+    @Async
+    public void saveMessagesAsync(ChatSession session, String userText, String aiText) {
+        // Save user message
+        ChatMessage userMsg = new ChatMessage(session, "user", userText);
+        messageRepo.save(userMsg);
+        // Save AI reply message
+        ChatMessage aiMsg = new ChatMessage(session, "assistant", aiText);
+        messageRepo.save(aiMsg);
     }
 
     /**
@@ -70,8 +82,7 @@ public class ChatService {
         String answer = llmResp.getMessage().getContent();
 
         // 6) persist the two messages
-        messageRepo.save(new ChatMessage(session, "user", prompt));
-        messageRepo.save(new ChatMessage(session, "assistant", answer));
+        saveMessagesAsync(session, prompt, answer);
 
         // 7) record usage
         usageTracker.recordUsage(
