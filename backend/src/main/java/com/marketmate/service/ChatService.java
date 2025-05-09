@@ -67,7 +67,7 @@ public class ChatService {
         }
 
         // 2) rate limit
-        rateLimitService.checkLimits(userId, model, tier, prompt);
+        rateLimitService.checkRateLimit(userId);
 
         // 3) history → system window
         List<ChatMessage> history = messageRepo.findBySession_IdOrderByCreatedAtAsc(sessionId);
