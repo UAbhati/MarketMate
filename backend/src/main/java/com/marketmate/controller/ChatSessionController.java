@@ -3,62 +3,69 @@ package com.marketmate.controller;
 import com.marketmate.entity.ChatSession;
 import com.marketmate.repository.ChatSessionRepository;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/sessions")
+@SecurityRequirement(name = "bearerAuth") // if you’ve defined a JWT bearer scheme in your OpenAPI config
 public class ChatSessionController {
+
     private final ChatSessionRepository repo;
 
     public ChatSessionController(ChatSessionRepository repo) {
         this.repo = repo;
     }
 
-    @Operation(summary = "Create new chat session")
+    private String currentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        return auth.getName();
+    }
+
+    @Operation(summary = "Create a new chat session (authenticated)")
     @PostMapping
-    public ChatSession create(
-        @Parameter(hidden = true)
-        @AuthenticationPrincipal 
-        UserDetails user, 
-        @RequestParam String title
-    ) {
-        ChatSession session = new ChatSession(user.getUsername(),title);
-        session.setUserId(user.getUsername());
+    public ChatSession createSession(@RequestParam String title) {
+        String userId = currentUserId();
+
+        ChatSession session = new ChatSession(userId, title);
+        session.setId(UUID.randomUUID());
+        session.setUserId(userId);
         session.setTitle(title);
+        // you can initialize summary=null, lastUpdated etc here
+
         return repo.save(session);
     }
 
-    @Operation(summary = "Get current user's chat sessions")
+    @Operation(summary = "List all of the current user's sessions")
     @GetMapping
-    public List<ChatSession> getMySessions(
-        @Parameter(hidden = true)    
-        @AuthenticationPrincipal 
-        UserDetails user
-    ) {
-        return repo.findByUserId(user.getUsername());
+    public List<ChatSession> listMySessions() {
+        String userId = currentUserId();
+        return repo.findByUserId(userId);
     }
 
-    @Operation(summary = "Get a single session by ID")
+    @Operation(summary = "Fetch a single session by UUID (authenticated)")
     @GetMapping("/{id}")
-    public ChatSession getSession(@PathVariable UUID id,
-            @Parameter(hidden = true)    
-            @AuthenticationPrincipal 
-            UserDetails user
-    ) {
+    public ChatSession getSession(@PathVariable UUID id) {
+        String userId = currentUserId();
+
         ChatSession session = repo.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (!session.getUserId().equals(user.getUsername())) {
-            throw new RuntimeException("Unauthorized");
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (!session.getUserId().equals(userId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your session");
         }
+
         return session;
     }
 }

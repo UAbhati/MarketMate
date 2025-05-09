@@ -1,7 +1,7 @@
 package com.marketmate.controller;
 
 import com.marketmate.entity.ChatMessage;
-import com.marketmate.entity.ChatSession;
+// import com.marketmate.entity.ChatSession;
 import com.marketmate.repository.ChatMessageRepository;
 import com.marketmate.repository.ChatSessionRepository;
 
@@ -28,13 +28,13 @@ public class ChatMessageController {
         return messages.findBySession_IdOrderByCreatedAtAsc(sessionId);
     }
 
-    @PostMapping
-    public ChatMessage add(
-            @PathVariable UUID sessionId,
-            @RequestBody ChatMessage payload) {
-        ChatSession s = sessions.findById(sessionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        payload.setSession(s);
-        return messages.save(payload);
-    }
+    // @PostMapping
+    // public ChatMessage add(
+    //         @PathVariable UUID sessionId,
+    //         @RequestBody ChatMessage payload) {
+    //     ChatSession s = sessions.findById(sessionId)
+    //             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    //     payload.setSession(s);
+    //     return messages.save(payload);
+    // }
 }

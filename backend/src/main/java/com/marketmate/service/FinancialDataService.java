@@ -1,5 +1,6 @@
 package com.marketmate.service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,8 +19,10 @@ public class FinancialDataService {
     }
 
     public List<ChatMessage> getContext(String prompt) {
-        // if prompt mentions "news for X", you could add a system message:
-        // return List.of(new ChatMessage(null,"system","Mock news..."));
-        return Collections.emptyList();
+        List<ChatMessage> ctx = new ArrayList<>();
+        // e.g. extract company tickers from prompt...
+        // ctx.add(new ChatMessage(null, "system", getFinancialNews(...)));
+        // ctx.add(new ChatMessage(null, "system", getQuarterlyResults(...)));
+        return ctx;
     }
 }

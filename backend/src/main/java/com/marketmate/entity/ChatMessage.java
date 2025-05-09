@@ -32,7 +32,6 @@ public class ChatMessage {
         this.session = session;
         this.role = role;
         this.content = content;
-        this.createdAt = Instant.now();
     }
 
     // Getters and setters

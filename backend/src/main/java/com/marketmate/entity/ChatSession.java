@@ -2,6 +2,8 @@ package com.marketmate.entity;
 
 import javax.persistence.*;
 
+import org.hibernate.annotations.GenericGenerator;
+
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import java.time.Instant;
@@ -11,9 +13,14 @@ import java.util.*;
 @Table(name = "chat_sessions")
 public class ChatSession {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(
+        name = "UUID",
+        strategy = "org.hibernate.id.UUIDGenerator"
+    )
+    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
     private UUID id;
-    
+
     private String userId;
     private String title;
     private String summary;
@@ -36,6 +43,10 @@ public class ChatSession {
     // Getters and setters
     public UUID getId() {
         return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
     }
 
     public String getUserId() {
