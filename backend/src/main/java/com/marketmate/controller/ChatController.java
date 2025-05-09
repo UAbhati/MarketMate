@@ -1,7 +1,10 @@
 package com.marketmate.controller;
 
 import com.marketmate.entity.ChatMessage;
+import com.marketmate.entity.ChatSession;
+import com.marketmate.repository.ChatSessionRepository;
 import com.marketmate.service.ChatService;
+import com.marketmate.service.RateLimitService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,11 +15,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -24,6 +28,8 @@ public class ChatController {
 
     @Autowired
     private ChatService chatService;
+    @Autowired private RateLimitService rateLimitService;
+    @Autowired private ChatSessionRepository sessionRepo;
 
      @Operation(
         summary = "Send a message to the current session",
@@ -55,7 +61,16 @@ public class ChatController {
             @RequestParam String message,
             @RequestParam String model,
             @RequestParam String tier) {
-        // Process the user message and get AI reply
+        ChatSession session = sessionRepo.findById(sessionId)
+          .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (!session.getUserId().equals(getCurrentUserId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        // 2) enforce RPM
+        rateLimitService.checkRateLimit(getCurrentUserId());
+        // 3) delegate to service, which already uses the stored system message +
+        // history
         String aiReplyContent = chatService.handleMessage(sessionId, 
                 getCurrentUserId(), message,
                 model, tier);

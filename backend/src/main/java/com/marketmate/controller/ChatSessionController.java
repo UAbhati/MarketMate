@@ -1,16 +1,19 @@
 package com.marketmate.controller;
 
+import com.marketmate.entity.ChatMessage;
 import com.marketmate.entity.ChatSession;
+import com.marketmate.repository.ChatMessageRepository;
 import com.marketmate.repository.ChatSessionRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +23,7 @@ import java.util.UUID;
 public class ChatSessionController {
 
     private final ChatSessionRepository repo;
+    @Autowired private ChatMessageRepository messageRepo;
 
     public ChatSessionController(ChatSessionRepository repo) {
         this.repo = repo;
@@ -42,9 +46,19 @@ public class ChatSessionController {
         session.setId(UUID.randomUUID());
         session.setUserId(userId);
         session.setTitle(title);
-        // you can initialize summary=null, lastUpdated etc here
+        repo.save(session);
 
-        return repo.save(session);
+        // ** NEW: seed the system prompt **
+        ChatMessage systemMessage = new ChatMessage();
+        systemMessage.setSession(session);
+        systemMessage.setRole("system");
+        systemMessage.setContent(
+          "You are MarketMate, a financial assistant. " +
+          "Only respond to financial-market questions. Provide concise, data-driven answers."
+        );
+        messageRepo.save(systemMessage);
+
+        return session;
     }
 
     @Operation(summary = "List all of the current user's sessions")
@@ -53,21 +67,6 @@ public class ChatSessionController {
         String userId = currentUserId();
         return repo.findByUserId(userId);
     }
-
-    // @Operation(summary = "Fetch a single session by UUID (authenticated)")
-    // @GetMapping("/{id}")
-    // public ChatSession getSession(@PathVariable UUID id) {
-    //     String userId = currentUserId();
-
-    //     ChatSession session = repo.findById(id)
-    //             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-    //     if (!session.getUserId().equals(userId)) {
-    //         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your session");
-    //     }
-
-    //     return session;
-    // }
 
     @Operation(summary = "Fetch a single session along with its messages by UUID (authenticated)")
     @GetMapping("/{id}")

@@ -25,7 +25,9 @@ public class ChatMessage {
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
-    protected ChatMessage() {}
+    public ChatMessage() {
+        this.createdAt = Instant.now();
+    }
 
     public ChatMessage(ChatSession session, String role, String content) {
         this.session = session;
