@@ -28,6 +28,8 @@ public class RateLimitService {
     }
 
     public void checkLimits(String userId, String model, String tier, String prompt) {
-        // Basic check stub
-    }
+        // lookup UsageRecord, enforce RPM/TPM, or throw
+        // e.g.
+        // if (tooMany) throw new RateLimitExceededException("...");
+    }    
 }

@@ -8,6 +8,7 @@ import com.marketmate.util.ContextBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ChatService {
@@ -15,26 +16,27 @@ public class ChatService {
     private final ChatMessageRepository messageRepo;
     private final ChatSessionRepository sessionRepo;
     private final RateLimitService rateLimitService;
-    private final UsageTracker usageTracker;
+    private final UsageRecordService usageRecordService;
     private final FinancialDataService financialDataService;
     private final LLMService llmService;
 
     public ChatService(ChatMessageRepository messageRepo,
             ChatSessionRepository sessionRepo,
             RateLimitService rateLimitService,
-            UsageTracker usageTracker,
+            UsageRecordService usageRecordService,
             FinancialDataService financialDataService,
             LLMService llmService) {
         this.messageRepo = messageRepo;
         this.sessionRepo = sessionRepo;
         this.rateLimitService = rateLimitService;
-        this.usageTracker = usageTracker;
+        this.usageRecordService = usageRecordService;
         this.financialDataService = financialDataService;
         this.llmService = llmService;
     }
 
     public String handleMessage(String sessionId, String userId, String prompt, String model, String tier) {
-        ChatSession session = sessionRepo.findById(Long.parseLong(sessionId))
+        UUID uuid = UUID.fromString(sessionId);
+        ChatSession session = sessionRepo.findById(uuid)
                 .orElseThrow(() -> new RuntimeException("Session not found"));
         if (!session.getUserId().equals(userId)) {
             throw new RuntimeException("Unauthorized access");
@@ -47,12 +49,16 @@ public class ChatService {
 
         rateLimitService.checkLimits(userId, model, tier, prompt);
 
-        String reply = llmService.ask(context, model);
+        String llmResponse = llmService.ask(context, model);
 
         messageRepo.save(new ChatMessage(session, "user", prompt));
-        messageRepo.save(new ChatMessage(session, "assistant", reply));
+        messageRepo.save(new ChatMessage(session, "assistant", llmResponse));
 
-        usageTracker.recordUsage(userId, model, tier, prompt, reply);
-        return reply;
+        usageRecordService.recordUsage(userId,
+                model,
+                tier,
+                0,
+                0);
+        return llmResponse;
     }
 }

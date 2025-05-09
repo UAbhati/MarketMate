@@ -1,16 +1,17 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-echo "📦 Setting up MarketMate..."
+echo "📦 Setting up MarketMate…"
 
-# Step 1: Create .env if not exists
+# 1) Ensure .env
 if [ ! -f .env ]; then
-  echo "Creating .env file..."
-  cat <<EOL > .env
+  echo "Creating .env file…"
+  cat > .env <<-EOL
 POSTGRES_DB=marketmate
 POSTGRES_USER=marketmate_user
 POSTGRES_PASSWORD=marketmate_pass
 
-SPRING_DATASOURCE_URL=jdbc:postgresql://marketmate-db:5432/marketmate
+SPRING_DATASOURCE_URL=jdbc:postgresql://marketmate-postgres:5432/marketmate
 SPRING_DATASOURCE_USERNAME=marketmate_user
 SPRING_DATASOURCE_PASSWORD=marketmate_pass
 SPRING_JPA_HIBERNATE_DDL_AUTO=update
@@ -22,12 +23,34 @@ else
   echo ".env already exists ✅"
 fi
 
-# Step 2: Build backend
-echo "🔧 Building Spring Boot backend..."
-cd backend || exit
-gradle build || { echo 'Gradle build failed ❌'; exit 1; }
-cd ..
+# export all the variables in .env into the shell
+set -o allexport
+source .env
+set +o allexport
 
-# Step 3: Start Docker containers using modern syntax
-echo "🐳 Starting Docker containers..."
-docker compose up --build
+# 2) Start Postgres only
+echo "🐳 Starting Postgres…"
+docker-compose up -d postgres
+
+# 3) Run Spring Boot backend (bootRun) with DevTools
+echo "🔧 Launching Spring Boot (dev mode)…"
+# if gradlew wrapper exists in project root:
+if [ -x "./gradlew" ]; then
+  ./gradlew -p backend bootRun &
+elif command -v gradle >/dev/null 2>&1; then
+  gradle -p backend bootRun &
+else
+  echo "❌ Neither ./gradlew nor gradle found. Please install Gradle or add the wrapper." >&2
+  exit 1
+fi
+
+# 4) Run Vite frontend
+echo "🔧 Launching Vite dev server…"
+(
+  cd frontend
+  npm install
+  npm run dev
+) &
+
+# 5) Wait on both background jobs
+wait

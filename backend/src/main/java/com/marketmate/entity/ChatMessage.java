@@ -4,29 +4,36 @@ import java.time.Instant;
 
 import javax.persistence.*;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+
 @Entity
 @Table(name = "chat_messages")
 public class ChatMessage {
-    public ChatMessage(ChatSession session, String role, String content) {
-        this.session = session;
-        this.role = role;
-        this.content = content;
-    }
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String role;
 
-    private Instant createdAt;
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
 
     @Column(columnDefinition = "TEXT")
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id")
+    @JoinColumn(name = "session_id", nullable=false)
+    @JsonBackReference
     private ChatSession session;
+
+    protected ChatMessage() {}
+
+    public ChatMessage(ChatSession session, String role, String content) {
+        this.session = session;
+        this.role = role;
+        this.content = content;
+        this.createdAt = Instant.now();
+    }
 
     // Getters and setters
     public Long getId() {

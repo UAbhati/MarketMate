@@ -1,6 +1,10 @@
 package com.marketmate.entity;
 
 import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import java.time.Instant;
 import java.util.*;
 
 @Entity
@@ -8,21 +12,29 @@ import java.util.*;
 public class ChatSession {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+    private UUID id;
+    
     private String userId;
-
     private String title;
-
-    private Date createdAt = new Date();
-
     private String summary;
 
-    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
+
+    @OneToMany(mappedBy="session", cascade=CascadeType.ALL, orphanRemoval=true)
+    @JsonManagedReference
     private List<ChatMessage> messages = new ArrayList<>();
 
+    protected ChatSession() {
+    }
+
+    public ChatSession(String userId, String title) {
+        this.userId = userId;
+        this.title = title;
+    }
+
     // Getters and setters
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
@@ -42,7 +54,7 @@ public class ChatSession {
         this.title = title;
     }
 
-    public Date getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 

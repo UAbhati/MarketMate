@@ -1,5 +1,6 @@
 package com.marketmate.service;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -17,6 +18,8 @@ public class FinancialDataService {
     }
 
     public List<ChatMessage> getContext(String prompt) {
-        return List.of(new ChatMessage(null, "data", "NIFTY is up 1.2% today."));
+        // if prompt mentions "news for X", you could add a system message:
+        // return List.of(new ChatMessage(null,"system","Mock news..."));
+        return Collections.emptyList();
     }
 }
