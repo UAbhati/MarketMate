@@ -53,7 +53,7 @@ public class ChatController {
             @RequestParam String message,
             @RequestParam String model,
             @RequestParam String tier) {
-        return chatService.handleMessage(String.valueOf(sessionId), getCurrentUserId(), message, model, tier);
+        return chatService.handleMessage(sessionId, getCurrentUserId(), message, model, tier);
     }
 
     private String getCurrentUserId() {

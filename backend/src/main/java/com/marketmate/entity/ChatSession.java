@@ -18,11 +18,14 @@ public class ChatSession {
         name = "UUID",
         strategy = "org.hibernate.id.UUIDGenerator"
     )
-    @Column(columnDefinition = "uuid", updatable = false, nullable = false)
+    @Column(name = "id", columnDefinition = "UUID", updatable = false, nullable = false)
     private UUID id;
 
+    @Column(nullable = false)
     private String userId;
+    @Column(nullable = false)
     private String title;
+    @Column(columnDefinition = "TEXT")
     private String summary;
 
     @Column(nullable = false, updatable = false)

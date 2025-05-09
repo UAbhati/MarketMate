@@ -23,34 +23,17 @@ else
   echo ".env already exists ✅"
 fi
 
-# export all the variables in .env into the shell
+# 2) Export .env vars into environment
 set -o allexport
 source .env
 set +o allexport
 
-# 2) Start Postgres only
-echo "🐳 Starting Postgres…"
-docker-compose up -d postgres
+# 3) Build and launch everything with Docker Compose
+echo "🐳 Building & starting containers…"
+docker-compose pull || true
+docker-compose build
+docker-compose up -d
 
-# 3) Run Spring Boot backend (bootRun) with DevTools
-echo "🔧 Launching Spring Boot (dev mode)…"
-# if gradlew wrapper exists in project root:
-if [ -x "./gradlew" ]; then
-  ./gradlew -p backend bootRun &
-elif command -v gradle >/dev/null 2>&1; then
-  gradle -p backend bootRun &
-else
-  echo "❌ Neither ./gradlew nor gradle found. Please install Gradle or add the wrapper." >&2
-  exit 1
-fi
-
-# 4) Run Vite frontend
-echo "🔧 Launching Vite dev server…"
-(
-  cd frontend
-  npm install
-  npm run dev
-) &
-
-# 5) Wait on both background jobs
-wait
+# 4) Tail logs
+echo "📜 Tailing logs (ctrl-c to quit)…"
+docker-compose logs -f

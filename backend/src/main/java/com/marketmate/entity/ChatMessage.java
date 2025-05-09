@@ -13,18 +13,17 @@ public class ChatMessage {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String role;
+    @ManyToOne
+    @JoinColumn(name = "session_id")
+    @JsonBackReference
+    private ChatSession session;
 
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
-
+    private String role; // "system", "user" or "assistant"/"AI"
     @Column(columnDefinition = "TEXT")
     private String content;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "session_id", nullable=false)
-    @JsonBackReference
-    private ChatSession session;
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
 
     protected ChatMessage() {}
 
@@ -32,6 +31,7 @@ public class ChatMessage {
         this.session = session;
         this.role = role;
         this.content = content;
+        this.createdAt = Instant.now();
     }
 
     // Getters and setters
@@ -55,6 +55,9 @@ public class ChatMessage {
         this.content = content;
     }
 
+    @JsonBackReference
+    @ManyToOne
+    @JoinColumn(name = "session_id")
     public ChatSession getSession() {
         return session;
     }

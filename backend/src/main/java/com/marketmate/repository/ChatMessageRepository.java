@@ -8,6 +8,5 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
-    List<ChatMessage> findBySession_Id(UUID sessionId);
     List<ChatMessage> findBySession_IdOrderByCreatedAtAsc(UUID sessionId);
 }
