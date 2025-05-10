@@ -83,9 +83,6 @@ public class LLMService {
             HttpEntity<String> entity = new HttpEntity<>(requestJson.toString(), headers);
             ResponseEntity<String> response = restTemplate.postForEntity(MODEL_URL, entity, String.class);
 
-            System.out.println("🧠 OpenRouter response code: " + response.getStatusCode());
-            System.out.println("📨 OpenRouter request body: " + entity);
-
             if (response.getStatusCode().is2xxSuccessful()) {
                 JSONObject result = new JSONObject(response.getBody());
                 responseText = result.getJSONArray("choices")

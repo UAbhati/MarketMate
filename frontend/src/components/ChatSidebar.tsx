@@ -22,7 +22,6 @@ export default function ChatSidebar() {
         const res = await api.get('/api/sessions', {
           headers: { 'Cache-Control': 'no-cache' }
         });
-        console.log("SESSION RESPONSE:", res.data);
         setSessions(res.data);
       } catch (err) {
         setError(true);
