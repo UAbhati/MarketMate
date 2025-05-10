@@ -1,56 +1,49 @@
-import React, { useState } from 'react';
+import React from 'react';
 import ChatSidebar from '../components/ChatSidebar';
 import ChatWindow from '../components/ChatWindow';
 import ChatSearchInput from '../components/ChatSearchInput';
 import styles from './chat.module.css';
 import Header from '../components/Header';
 import { useParams } from 'react-router-dom';
-
-export interface Message {
-  id?: number;            // optional, for messages already saved to DB
-  role: 'user' | 'assistant' | 'system'; // identifies who sent the message
-  content: string;        // actual message text
-  createdAt?: string;     // optional: if you want to show timestamps
-}
+import { useChatContext } from '../context/ChatContext';
 
 const Chat: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
   const { sessionId } = useParams();
-  const [model, setModel] = useState('gpt-3.5');
-  const [tier, setTier] = useState('FREE');
+  const {
+    setModel,
+    setTier,
+    messages,
+    setMessages
+  } = useChatContext();
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     window.location.href = '/login';
   };
 
-  const handleMessageAdded = (msg: Message) => {
-    setMessages(prev => [...prev, msg]);
-  };
+  const onModelOrTierChange = (model: string, tier:string) => {
+    setModel(model);
+    setTier(tier);
+  }
 
   return (
     <div className={styles.chatContainer}>
       <div className={styles.chatMain}>
-        <Header onLogout={handleLogout} onChange={(m, t) => {
-          setModel(m);
-          setTier(t);
-        }} />
+        <Header
+          onLogout={handleLogout}
+          onChange={onModelOrTierChange}
+        />
         <div className="app">
           <ChatSidebar />
           <div className="chat-window">
-            {sessionId && 
-              <ChatWindow 
-                sessionId={sessionId} 
-                messages={messages} 
-                setMessages={setMessages} 
+            {sessionId &&
+              <ChatWindow
+                sessionId={sessionId}
+                messages={messages}
+                setMessages={setMessages}
               />
             }
-            {sessionId && <ChatSearchInput
-              sessionId={sessionId}
-              onMessageAdded={handleMessageAdded}
-              model={model}
-              tier={tier}
-            />}
+            {sessionId && <ChatSearchInput />}
           </div>
         </div>
       </div>

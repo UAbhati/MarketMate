@@ -1,68 +1,80 @@
-import { useState } from 'react';
-import api from '../axios';
-import styles from '../pages/chat.module.css';
-import { Message } from '../pages/Chat';
+import { useState } from "react";
+import { sendMessage } from "../services/chatService";
+import { ChatMessage, useChatContext } from "../context/ChatContext";
+import { toast } from "react-toastify";
+import { useParams } from "react-router-dom";
 
-interface Props {
-  sessionId: string | undefined;
-  onMessageAdded: (message: Message) => void;
-  model: string;
-  tier: string;
-}
-
-export default function ChatSearchInput({ sessionId, onMessageAdded, model, tier }: Props) {
-  const [query, setQuery] = useState('');
+export default function ChatSearchInput() {
+  const { setMessages, model, tier } = useChatContext();
+  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [popoverMessage, setPopoverMessage] = useState<string | null>(null);
+  const [useRealLLM, setUseRealLLM] = useState(true);
+  const { sessionId } = useParams();
 
-  const sendMessage = async () => {
-    if (!query.trim() || !sessionId) return;
-
-    onMessageAdded({ role: 'user', content: query });
+  const handleSend = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    console.log("🚀 Send clicked:", message);
+    if (!message.trim() || !sessionId) return;
     setLoading(true);
 
     try {
-      const response = await api.post('/api/chat', null, {params: {
+      const res = await sendMessage(
         sessionId,
+        message,
         model,
         tier,
-        message: query,
-      }});
-      const aiReply = response.data.content || 'No response';
-      onMessageAdded({ role: 'assistant', content: aiReply });
+        useRealLLM
+      );
+      setMessages((prev) => [...prev, res]);
+      setMessage("");
     } catch (err: any) {
-
-      if (err.response?.status === 422) {
-        setPopoverMessage(
-          "❌ Please ask financial-market-related questions.\n" +
-          "💡 Try: 'Q1 results for TCS' or 'market value of Reliance today'."
-        );
+      if (err?.response?.status === 422) {
+        toast.warning("⚠️ Please ask only financial-market-related questions.");
       } else {
-        onMessageAdded({ role: 'assistant', content: "financial-market-related questions Only." });
+        toast.error("Something went wrong. Please try again.");
       }
     } finally {
-      setQuery('');
       setLoading(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleSend();
+  };
+
   return (
-    <div className={styles.searchInput}>
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Ask something..."
-      />
-      <button onClick={sendMessage} disabled={loading || !sessionId}>
-        {loading ? '...' : 'Send'}
-      </button>
-      {popoverMessage && (
-        <div className="popover-error">
-          <p>{popoverMessage}</p>
-          <button onClick={() => setPopoverMessage(null)}>×</button>
-        </div>
-      )}
+    <div className="p-3 border-t border-gray-200 bg-white">
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <label className="text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={useRealLLM}
+            onChange={() => setUseRealLLM(!useRealLLM)}
+            className="mr-1"
+          />
+          Use Real LLM (OpenRouter)
+        </label>
+        {loading && <span className="text-sm text-gray-500">Generating response…</span>}
+      </div>
+      <div className="flex">
+        <input
+          type="text"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={loading}
+          className="flex-1 border border-gray-300 rounded-l px-3 py-2"
+          placeholder="Ask your financial question..."
+        />
+        <button
+          type="button"
+          onClick={handleSend}
+          disabled={loading || !sessionId}
+          className="bg-blue-600 text-white px-4 py-2 mx-2 rounded-r"
+        >
+          {loading ? '...' : 'Send'}
+        </button>
+      </div>
     </div>
   );
 }

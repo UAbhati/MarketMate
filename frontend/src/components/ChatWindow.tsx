@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../axios';
 import styles from '../pages/chat.module.css';
-import { Message } from '../pages/Chat';
+import { ChatMessage } from '../context/ChatContext';
 
 interface Props {
   sessionId: string;
-  messages: Message[];
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  messages: ChatMessage[];
+  setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>;
 }
 
 export default function ChatWindow({ sessionId, messages, setMessages }: Props) {
