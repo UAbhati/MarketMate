@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../axios';
+import api from '../axios';
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -16,7 +16,8 @@ const Register: React.FC = () => {
     setSuccess('');
     setLoading(true);
     try {
-      await axios.post('/auth/register', { password, email });
+      console.log("Calling:", api.defaults.baseURL + '/auth/login');
+      await api.post('/api/auth/register', { email, password });
       setSuccess('Registered successfully! Redirecting...');
       setTimeout(() => navigate('/login'), 1000);
     } catch (err: any) {

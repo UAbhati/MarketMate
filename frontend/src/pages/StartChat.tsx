@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../axios';
+import api from '../axios';
 
 const StartChat: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -9,13 +9,14 @@ const StartChat: React.FC = () => {
   const navigate = useNavigate();
 
   const handleStart = async () => {
-    if(title === '') setError("Add some title");
     setError('');
     setLoading(true);
     try {
       const fallback = `Chat ${Math.random().toString(36).substring(2, 8)}`;
       const sessionTitle = title.trim() || fallback;
-      const res = await axios.post(`/api/sessions?title=${encodeURIComponent(sessionTitle)}`);
+      const res = await api.post('/api/sessions', {
+        title: sessionTitle
+      });
       navigate(`/chat/${res.data.id}`);
     } catch (err) {
       setError('Failed to create session. Please try again.');

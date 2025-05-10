@@ -2,6 +2,9 @@ package com.marketmate.util;
 
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class FinancialRelatedQuestions {
     private static final List<String> FINANCE_KEYWORDS = List.of(
             "finance", "financial", "investment", "investor", "company", "firm", "business", "corporation", "market",

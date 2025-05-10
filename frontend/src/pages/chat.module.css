@@ -188,3 +188,14 @@ button {
 .searchInput button:hover {
   background-color: #2b6cb0;
 }
+
+.popover-error {
+  background: #fef3c7;
+  border: 1px solid #facc15;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #92400e;
+  position: absolute;
+}

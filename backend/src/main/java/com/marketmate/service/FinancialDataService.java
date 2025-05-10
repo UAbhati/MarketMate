@@ -12,8 +12,12 @@ import java.util.regex.Pattern;
 
 @Service
 public class FinancialDataService {
-    private FinancialRelatedQuestions financialRelatedQuestions;
+    private final FinancialRelatedQuestions financialRelatedQuestions;
     private static final Pattern COMPANY_REGEX = Pattern.compile("for\\s+([A-Za-z0-9 &]+)", Pattern.CASE_INSENSITIVE);
+
+    public FinancialDataService(FinancialRelatedQuestions financialRelatedQuestions) {
+        this.financialRelatedQuestions = financialRelatedQuestions;
+    }
 
     /**
      * Returns mocked financial news and results for a given company only if the
@@ -37,9 +41,8 @@ public class FinancialDataService {
                     "Latest news for " + company + ": " + news));
 
             // mock Quarterly Results API integration
-            String results = getQuarterlyResults(company, "Q1 2025");
-            ctx.add(new ChatMessage(null, "function",
-                    "Quarterly results for " + company + ": " + results));
+            String resultsFormatted = formatResults(company);
+            ctx.add(new ChatMessage(null, "function", resultsFormatted));
         }
 
         return ctx;
@@ -67,4 +70,21 @@ public class FinancialDataService {
         return "{ \"company_name\": \"" + companyName + "\", \"quarter\": \"" + quarter
                 + "\", \"valuation_ratios\": { \"pe_ratio\": 23.4, \"pb_ratio\": 3.1 }, \"files\": { \"balance_sheet_excel\": \"https://dummyfinancialapi.com/files/balance_sheet.xlsx\", \"analyst_call_transcript_doc\": \"https://dummyfinancialapi.com/files/analyst_call_transcript.docx\" } }";
     }
+
+    /*
+     * formatted results
+     */
+    private String formatResults(String company) {
+        return String.format(
+                "📊 *Quarterly Results for %s (Q1 2025)*\n\n" +
+                        "- **PE Ratio**: 23.4\n" +
+                        "- **PB Ratio**: 3.1\n\n" +
+                        "📂 *Reports:*\n" +
+                        "- [Balance Sheet (Excel)](https://dummyfinancialapi.com/files/balance_sheet.xlsx)\n" +
+                        "- [Analyst Call Transcript (Doc)](https://dummyfinancialapi.com/files/analyst_call_transcript.docx)\n\n"
+                        +
+                        "_This is a mocked response._",
+                company);
+    }
+
 }

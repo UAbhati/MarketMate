@@ -31,7 +31,7 @@ public class ChatController {
     private ChatService chatService;
     @Autowired private RateLimitService rateLimitService;
     @Autowired private ChatSessionRepository sessionRepo;
-    private FinancialRelatedQuestions financialRelatedQuestions;
+    @Autowired private FinancialRelatedQuestions financialRelatedQuestions;
 
      @Operation(
         summary = "Send a message to the current session",
@@ -64,10 +64,15 @@ public class ChatController {
             @RequestParam String model,
             @RequestParam String tier
     ) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         ChatSession session = sessionRepo.findById(sessionId)
           .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (!session.getUserId().equals(getCurrentUserId())) {
+        if (!session.getUserId().equals(userId)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        if (message == null || message.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message cannot be empty");
         }
 
         if (!financialRelatedQuestions.isFinancialQuery(message.toLowerCase())) {
@@ -77,10 +82,10 @@ public class ChatController {
 
         // 1. Build context and call LLM
         APIResponse aiResp = chatService.buildContextAndCallLLM(
-                sessionId, getCurrentUserId(), message, model);
+                sessionId, userId, message, model);
         // 2) enforce RPM
         rateLimitService.checkAllLimits(
-            getCurrentUserId(),
+            userId,
             model,
             aiResp.getPromptTokens(),
             aiResp.getCompletionTokens()
@@ -90,18 +95,12 @@ public class ChatController {
                 session,
                 message,
                 aiResp.getMessage().getContent(),
-                getCurrentUserId(),
+                userId,
                 model,
                 tier,
                 aiResp.getPromptTokens(),
                 aiResp.getCompletionTokens());
 
         return aiResp.getMessage();
-    }
-
-    private String getCurrentUserId() {
-        // extract from SecurityContext or JWT…
-        return SecurityContextHolder.getContext()
-        .getAuthentication().getName();
     }
 }

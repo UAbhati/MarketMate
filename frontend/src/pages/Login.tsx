@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from '../axios';
+import api from '../axios';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -14,9 +14,10 @@ const Login: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      console.log("Login: ",email, password);
-      const response = await axios.post('/auth/login', null, {
-        params: { email, password }
+      console.log("Calling:", api.defaults.baseURL + '/auth/login');
+      const response = await api.post('/api/auth/login', {
+        email,
+        password
       });
       const { token } = response.data;
       localStorage.setItem('token', token);

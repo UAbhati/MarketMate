@@ -23,11 +23,12 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth") // if you’ve defined a JWT bearer scheme in your OpenAPI config
 public class ChatSessionController {
 
-    private final ChatSessionRepository repo;
+    private final ChatSessionRepository sessionRepo;
     @Autowired private ChatMessageRepository messageRepo;
 
-    public ChatSessionController(ChatSessionRepository repo) {
-        this.repo = repo;
+    public ChatSessionController(ChatSessionRepository sessionRepo, ChatMessageRepository messageRepo) {
+        this.sessionRepo = sessionRepo;
+        this.messageRepo = messageRepo;
     }
 
     private String currentUserId() {
@@ -38,17 +39,21 @@ public class ChatSessionController {
         return auth.getName();
     }
 
+    public static class CreateSessionRequest {
+        public String title;
+    }
+
     @Operation(summary = "Create a new chat session (authenticated)")
     @Transactional
     @PostMapping
-    public ChatSession createSession(@RequestParam String title) {
+    public ChatSession createSession(@RequestBody CreateSessionRequest request) {
+        if (request.title == null || request.title.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Title cannot be empty");
+        }
         String userId = currentUserId();
 
-        ChatSession session = new ChatSession(userId, title);
-        repo.save(session);
-
-        System.out.println("Session ID before saving message: " + session.getId());
-        System.out.println("Is session present in DB? " + repo.existsById(session.getId()));
+        ChatSession session = new ChatSession(userId, request.title.trim());
+        sessionRepo.save(session);
 
         // ** NEW: seed the system prompt **
         ChatMessage systemMessage = new ChatMessage();
@@ -66,17 +71,15 @@ public class ChatSessionController {
     @Operation(summary = "List all of the current user's sessions")
     @GetMapping
     public List<ChatSession> listMySessions() {
-        String userId = currentUserId();
-        return repo.findByUserId(userId);
+        return sessionRepo.findByUserId(currentUserId());
     }
 
     @Operation(summary = "Fetch a single session along with its messages by UUID (authenticated)")
     @GetMapping("/{id}")
     public ChatSession getSessionWithMessages(@PathVariable UUID id) {
-        String userId = currentUserId();
-        ChatSession session = repo.findById(id)
+        ChatSession session = sessionRepo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (!session.getUserId().equals(userId)) {
+        if (!session.getUserId().equals(currentUserId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Not your session");
         }
         // Ensure messages are loaded (e.g., by JPA fetch or manually loading)

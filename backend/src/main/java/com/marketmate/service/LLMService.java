@@ -27,7 +27,7 @@ public class LLMService {
         ChatMessage lastUser = context.get(context.size() - 1);
 
         // build your assistant reply
-        String reply = "Mocked LLM reply to `" + lastUser.getContent() + "`";
+        String reply = "🧠 Insight for: \"" + lastUser.getContent() + "\"";
         ChatMessage aiMessage = new ChatMessage(session, "assistant", reply);
 
         // now build your APIResponse
@@ -35,7 +35,7 @@ public class LLMService {
         resp.setId(UUID.randomUUID().toString());
         resp.setPromptTokens(calculatePromptTokens(context));
         resp.setCompletionTokens(calculateCompletionTokens(reply));
-        resp.setCreated(Instant.now().getEpochSecond());
+        resp.setCreated(Instant.now());
         resp.setMessage(aiMessage);
         resp.setFinishReason("STOP");
         return resp;

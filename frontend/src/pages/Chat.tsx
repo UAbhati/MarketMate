@@ -13,7 +13,6 @@ export interface Message {
   createdAt?: string;     // optional: if you want to show timestamps
 }
 
-
 const Chat: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const { sessionId } = useParams();
@@ -39,9 +38,15 @@ const Chat: React.FC = () => {
         <div className="app">
           <ChatSidebar />
           <div className="chat-window">
-            {sessionId && <ChatWindow sessionId={parseInt(sessionId)} />}
+            {sessionId && 
+              <ChatWindow 
+                sessionId={sessionId} 
+                messages={messages} 
+                setMessages={setMessages} 
+              />
+            }
             {sessionId && <ChatSearchInput
-              sessionId={parseInt(sessionId)}
+              sessionId={sessionId}
               onMessageAdded={handleMessageAdded}
               model={model}
               tier={tier}

@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
     @Autowired
@@ -25,27 +25,32 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    public static class LoginRequest {
+        public String email;
+        public String password;
+    }
+
     @Operation(summary = "Register a new user")
     @ApiResponse(responseCode = "200", description = "User registered successfully")
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
+    public Map<String, String> register(@RequestBody User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
-        return "User registered successfully";
+        return Map.of("message", "User registered successfully");
     }
 
     @Operation(summary = "Authenticate user and return JWT token")
     @ApiResponse(responseCode = "200", description = "Login successful")
     @PostMapping("/login")
     public Map<String, String> login(
-            @RequestParam String email,
-            @RequestParam String password,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "User login credentials")
+            @RequestBody LoginRequest req,
             HttpServletResponse response) {
-        Optional<User> userOpt = userRepository.findByEmail(email);
+        Optional<User> userOpt = userRepository.findByEmail(req.email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            if (passwordEncoder.matches(password, user.getPassword())) {
-                String token = jwtUtil.generateToken(email);
+            if (passwordEncoder.matches(req.password, user.getPassword())) {
+                String token = jwtUtil.generateToken(req.email);
                 return Map.of("token", token);
             }
         }

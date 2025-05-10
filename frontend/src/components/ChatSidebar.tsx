@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import axios from '../axios';
+import api from '../axios';
 import styles from '../pages/chat.module.css';
 import { useNavigate, useParams  } from 'react-router-dom';
 
 interface Session {
-  id: number;
+  id: string;
   title: string;
 }
 
@@ -19,7 +19,7 @@ export default function ChatSidebar() {
     const fetchSessions = async () => {
       setLoading(true);
       try {
-        const res = await axios.get('/chat/sessions', {
+        const res = await api.get('/api/sessions', {
           headers: { 'Cache-Control': 'no-cache' }
         });
         console.log("SESSION RESPONSE:", res.data);
@@ -34,7 +34,7 @@ export default function ChatSidebar() {
     fetchSessions();
   }, []);
 
-  const handleSelect = (id: number) => {
+  const handleSelect = (id: string) => {
     navigate(`/chat/${id}`)
   };
 

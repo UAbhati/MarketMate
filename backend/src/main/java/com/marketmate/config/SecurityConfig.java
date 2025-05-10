@@ -40,7 +40,7 @@ public class SecurityConfig {
             .csrf().disable() // disable CSRF for API
             .cors().and()
             .authorizeHttpRequests()
-            .requestMatchers(new AntPathRequestMatcher("/auth/**"),
+            .requestMatchers(new AntPathRequestMatcher("/api/auth/**"),
                 new AntPathRequestMatcher("/swagger-ui/**"),
                 new AntPathRequestMatcher("/v3/api-docs/**"))
             .permitAll()

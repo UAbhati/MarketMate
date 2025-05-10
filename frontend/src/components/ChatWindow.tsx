@@ -1,24 +1,23 @@
-import React, { useEffect, useRef, useState } from 'react';
-import axios from '../axios';
+import { useEffect, useRef, useState } from 'react';
+import api from '../axios';
 import styles from '../pages/chat.module.css';
+import { Message } from '../pages/Chat';
 
-interface Message {
-  id?: number;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  createdAt?: string;
+interface Props {
+  sessionId: string;
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
 
-export default function ChatWindow({ sessionId }: { sessionId: number }) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function ChatWindow({ sessionId, messages, setMessages }: Props) {
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (sessionId) {
       setLoading(true);
-      axios.get(`/api/chat/messages/${sessionId}`)
-        .then(res => setMessages(res.data))
+      api.get(`/api/sessions/${sessionId}`)
+        .then(res => setMessages(res.data.messages))
         .catch(console.error)
         .finally(() => setLoading(false));
     }
