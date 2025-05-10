@@ -81,6 +81,16 @@ public class ChatController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message cannot be empty");
         }
 
+        // simple greeting handler
+        String trimmed = message.trim().toLowerCase();
+        if (trimmed.equals("hi") || trimmed.equals("hello")) {
+            ChatMessage reply = new ChatMessage();
+            reply.setRole("assistant");
+            reply.setContent(
+                    "👋 Hello! I can help you with questions about the financial market.\n\n💡 Example: 'What is the PE ratio of Infosys?' or 'Give Q1 results of TCS'.");
+            return new APIResponse(reply, 0, 0).getMessage();
+        }
+
         // 1. Build context and call LLM
         APIResponse aiResp = chatService.buildContextAndCallLLM(
                 sessionId, userId, message, model, useRealLLM);

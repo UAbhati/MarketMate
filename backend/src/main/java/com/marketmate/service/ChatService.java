@@ -67,16 +67,6 @@ public class ChatService {
             throw new SecurityException("Not your session");
         }
 
-        // simple greeting handler
-        String trimmed = prompt.trim().toLowerCase();
-        if (trimmed.equals("hi") || trimmed.equals("hello")) {
-            ChatMessage reply = new ChatMessage();
-            reply.setRole("assistant");
-            reply.setContent(
-                    "👋 Hello! I can help you with questions about the financial market.\n\n💡 Example: 'What is the PE ratio of Infosys?' or 'Give Q1 results of TCS'.");
-            return new APIResponse(reply, 0, 0);
-        }
-
         // 1. Fetch chat history
         List<ChatMessage> history = messageRepo.findBySession_IdOrderByCreatedAtAsc(sessionId);
         List<ChatMessage> context = ContextBuilder.buildWindow(session, history);

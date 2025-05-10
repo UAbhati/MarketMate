@@ -13,7 +13,8 @@ import java.util.regex.Pattern;
 @Service
 public class FinancialDataService {
     private final FinancialRelatedQuestions financialRelatedQuestions;
-    private static final Pattern COMPANY_REGEX = Pattern.compile("(?:for|of|about)\\s+([A-Za-z0-9.&\\-\\s]+)",
+    private static final Pattern COMPANY_REGEX = Pattern.compile(
+            "(?:for|of|about)\\s+(the\\s+)?([A-Za-z0-9.&\\-\\s]{2,30})",
             Pattern.CASE_INSENSITIVE);
 
     public FinancialDataService(FinancialRelatedQuestions financialRelatedQuestions) {
@@ -28,10 +29,10 @@ public class FinancialDataService {
     public List<ChatMessage> getContext(String prompt) {
         List<ChatMessage> ctx = new ArrayList<>();
 
-        String company = extractCompanyName(prompt);
-        if (isFinancialQuery(prompt) && hasFinancialIntent(prompt) && extractCompanyName(prompt) != null) {
-                
-                if (company != null) {
+        
+        if (isFinancialQuery(prompt) && hasFinancialIntent(prompt)) {
+            String company = extractCompanyName(prompt);
+            if (company != null) {
                 // mock Financial News API integration
                 String news = getFinancialNews(company);
                 ctx.add(new ChatMessage(null, "function",
@@ -55,7 +56,10 @@ public class FinancialDataService {
     private String extractCompanyName(String prompt) {
         Matcher matcher = COMPANY_REGEX.matcher(prompt);
         if (matcher.find()) {
-            return matcher.group(1).trim();
+            String company = matcher.group(2).trim(); // ← fixed group
+            if (company.length() > 30 || company.split("\\s+").length > 5)
+                return null;
+            return company;
         }
         return null;
     }    
