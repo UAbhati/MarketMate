@@ -53,7 +53,14 @@ public class ChatService {
      * token counts).
      * Does NOT save messages or usage.
      */
-    public APIResponse buildContextAndCallLLM(UUID sessionId, String userId, String prompt, String model) {
+    public APIResponse buildContextAndCallLLM(
+        UUID sessionId, 
+        String userId, 
+        String prompt, 
+        String model,
+        Boolean useRealLLM
+    ) {
+        System.out.println("📩 Prompt received: '" + prompt + "'");
         ChatSession session = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown session"));
 
@@ -62,7 +69,8 @@ public class ChatService {
         }
 
         // simple greeting handler
-        if (prompt.trim().equalsIgnoreCase("hi") || prompt.trim().equalsIgnoreCase("hello")) {
+        String trimmed = prompt.trim().toLowerCase();
+        if (trimmed.equals("hi") || trimmed.equals("hello")) {
             ChatMessage reply = new ChatMessage();
             reply.setRole("assistant");
             reply.setContent(
@@ -72,9 +80,20 @@ public class ChatService {
 
         List<ChatMessage> history = messageRepo.findBySession_IdOrderByCreatedAtAsc(sessionId);
         List<ChatMessage> context = ContextBuilder.buildWindow(session, history);
-        context.addAll(financialDataService.getContext(prompt));
+        List<ChatMessage> financialContext = financialDataService.getContext(prompt);
 
-        return llmService.askLLM(context, model);
+        if (!financialContext.isEmpty()) {
+            ChatMessage combined = new ChatMessage(session, "assistant",
+                    financialContext.stream()
+                            .map(ChatMessage::getContent)
+                            .reduce("", (a, b) -> a + "\n" + b).trim());
+            return new APIResponse(combined, 0, 0);
+        }
+
+        context.addAll(financialContext);
+        context.add(new ChatMessage(session, "user", prompt));
+
+        return llmService.askLLM(context, model, useRealLLM);
     }
 
     /**

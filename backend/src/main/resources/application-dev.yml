@@ -19,5 +19,9 @@ springdoc:
   api-docs:
     path: /v3/api-docs
 
+openrouter:
+  api:
+    token: ${OPENROUTER_API_TOKEN}
+
 jwt:
   secret: ${JWT_SECRET}

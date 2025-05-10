@@ -13,7 +13,8 @@ import java.util.regex.Pattern;
 @Service
 public class FinancialDataService {
     private final FinancialRelatedQuestions financialRelatedQuestions;
-    private static final Pattern COMPANY_REGEX = Pattern.compile("for\\s+([A-Za-z0-9 &]+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern COMPANY_REGEX = Pattern.compile("(?:for|of|about)\\s+([A-Za-z0-9.&\\-\\s]+)",
+            Pattern.CASE_INSENSITIVE);
 
     public FinancialDataService(FinancialRelatedQuestions financialRelatedQuestions) {
         this.financialRelatedQuestions = financialRelatedQuestions;
@@ -27,26 +28,37 @@ public class FinancialDataService {
     public List<ChatMessage> getContext(String prompt) {
         List<ChatMessage> ctx = new ArrayList<>();
 
-        if (!isFinancialQuery(prompt)) {
-            return ctx; // Return empty if not financial
-        }
+        String company = extractCompanyName(prompt);
+        if (isFinancialQuery(prompt) && hasFinancialIntent(prompt) && extractCompanyName(prompt) != null) {
+                
+                if (company != null) {
+                // mock Financial News API integration
+                String news = getFinancialNews(company);
+                ctx.add(new ChatMessage(null, "function",
+                        "Latest news for " + company + ": " + news));
 
-        Matcher m = COMPANY_REGEX.matcher(prompt);
-        if (m.find()) {
-            String company = m.group(1).trim();
-
-            // mock Financial News API integration
-            String news = getFinancialNews(company);
-            ctx.add(new ChatMessage(null, "function",
-                    "Latest news for " + company + ": " + news));
-
-            // mock Quarterly Results API integration
-            String resultsFormatted = formatResults(company);
-            ctx.add(new ChatMessage(null, "function", resultsFormatted));
+                // mock Quarterly Results API integration
+                String resultsFormatted = formatResults(company);
+                ctx.add(new ChatMessage(null, "function", resultsFormatted));
+            }
         }
 
         return ctx;
     }
+
+    private boolean hasFinancialIntent(String prompt) {
+        String promptLower = prompt.toLowerCase();
+        return promptLower.matches(
+                ".*\\b(pe ratio|market value|stock price|quarterly results|valuation|news|revenue|eps|earnings|growth|profit|balance sheet)\\b.*");
+    }    
+
+    private String extractCompanyName(String prompt) {
+        Matcher matcher = COMPANY_REGEX.matcher(prompt);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        return null;
+    }    
 
     private boolean isFinancialQuery(String prompt) {
         String lower = prompt.toLowerCase();

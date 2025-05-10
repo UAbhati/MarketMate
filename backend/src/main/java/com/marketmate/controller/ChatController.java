@@ -50,6 +50,11 @@ public class ChatController {
             name="tier", in=ParameterIn.QUERY,
             description="Subscription tier",
             schema=@Schema(allowableValues={"FREE","TIER_1","TIER_2","TIER_3"})
+        ),
+        @Parameter(
+            name="useRealLLM", in=ParameterIn.QUERY,
+            description="Weather to use llm model or mock",
+            schema=@Schema(type="boolean", defaultValue = "false")
         )
         }
     )
@@ -62,7 +67,8 @@ public class ChatController {
             @RequestParam UUID sessionId,
             @RequestParam String message,
             @RequestParam String model,
-            @RequestParam String tier
+            @RequestParam String tier,
+            @RequestParam(required = false, defaultValue = "false") boolean useRealLLM
     ) {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         ChatSession session = sessionRepo.findById(sessionId)
@@ -75,22 +81,22 @@ public class ChatController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Message cannot be empty");
         }
 
-        if (!financialRelatedQuestions.isFinancialQuery(message.toLowerCase())) {
+        // 1. Build context and call LLM
+        APIResponse aiResp = chatService.buildContextAndCallLLM(
+                sessionId, userId, message, model, useRealLLM);
+        // 2. Only now enforce domain relevance
+        if (!financialRelatedQuestions.isFinancialQuery(message.toLowerCase()) && !useRealLLM) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Please ask only financial-market-related questions.");
         }
-
-        // 1. Build context and call LLM
-        APIResponse aiResp = chatService.buildContextAndCallLLM(
-                sessionId, userId, message, model);
-        // 2) enforce RPM
+        // 3. enforce RPM
         rateLimitService.checkAllLimits(
             userId,
             model,
             aiResp.getPromptTokens(),
             aiResp.getCompletionTokens()
         );
-        // 3. Save messages + usage
+        // 4. Save messages + usage
         chatService.saveMessagesAndTrack(
                 session,
                 message,
