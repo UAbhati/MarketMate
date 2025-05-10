@@ -54,7 +54,7 @@ public class ChatController {
         @Parameter(
             name="useRealLLM", in=ParameterIn.QUERY,
             description="Weather to use llm model or mock",
-            schema=@Schema(type="boolean", defaultValue = "false")
+            schema=@Schema(type="boolean", defaultValue = "true")
         )
         }
     )
@@ -68,7 +68,7 @@ public class ChatController {
             @RequestParam String message,
             @RequestParam String model,
             @RequestParam String tier,
-            @RequestParam(required = false, defaultValue = "false") boolean useRealLLM
+            @RequestParam(required = false, defaultValue = "true") boolean useRealLLM
     ) {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         ChatSession session = sessionRepo.findById(sessionId)
@@ -85,7 +85,7 @@ public class ChatController {
         APIResponse aiResp = chatService.buildContextAndCallLLM(
                 sessionId, userId, message, model, useRealLLM);
         // 2. Only now enforce domain relevance
-        if (!financialRelatedQuestions.isFinancialQuery(message.toLowerCase()) && !useRealLLM) {
+        if (!financialRelatedQuestions.isFinancialQuery(message.toLowerCase())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Please ask only financial-market-related questions.");
         }

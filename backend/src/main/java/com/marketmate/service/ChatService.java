@@ -60,7 +60,6 @@ public class ChatService {
         String model,
         Boolean useRealLLM
     ) {
-        System.out.println("📩 Prompt received: '" + prompt + "'");
         ChatSession session = sessionRepo.findById(sessionId)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown session"));
 
@@ -78,10 +77,12 @@ public class ChatService {
             return new APIResponse(reply, 0, 0);
         }
 
+        // 1. Fetch chat history
         List<ChatMessage> history = messageRepo.findBySession_IdOrderByCreatedAtAsc(sessionId);
         List<ChatMessage> context = ContextBuilder.buildWindow(session, history);
-        List<ChatMessage> financialContext = financialDataService.getContext(prompt);
 
+        // 2. Get financial context
+        List<ChatMessage> financialContext = financialDataService.getContext(prompt);
         if (!financialContext.isEmpty()) {
             ChatMessage combined = new ChatMessage(session, "assistant",
                     financialContext.stream()
@@ -90,10 +91,11 @@ public class ChatService {
             return new APIResponse(combined, 0, 0);
         }
 
+        // 3. Fall back to LLM
         context.addAll(financialContext);
         context.add(new ChatMessage(session, "user", prompt));
-
-        return llmService.askLLM(context, model, useRealLLM);
+        APIResponse aiResp = llmService.askLLM(context, model, useRealLLM);
+        return aiResp;
     }
 
     /**

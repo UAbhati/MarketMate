@@ -60,9 +60,6 @@ public class LLMService {
         // Real openroute LLM call
         // Build OpenAI-style message array
         JSONArray messagesArray = new JSONArray();
-        // messagesArray.put(new JSONObject()
-        //         .put("role", "system")
-        //         .put("content", "You are a helpful assistant specialized in financial market questions."));
 
         for (ChatMessage msg : context) {
             JSONObject msgJson = new JSONObject();

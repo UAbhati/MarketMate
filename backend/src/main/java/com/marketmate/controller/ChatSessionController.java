@@ -60,8 +60,10 @@ public class ChatSessionController {
         systemMessage.setSession(session);
         systemMessage.setRole("system");
         systemMessage.setContent(
-          "You are MarketMate, a financial assistant. " +
-          "Only respond to financial-market questions. Provide concise, data-driven answers."
+                "You are MarketMate, a strict financial assistant. You must only answer questions directly " +
+                "related to the financial markets, companies, stocks, economy, or investments. " +
+                "If a question is not financial in nature, clearly respond: 'Sorry, I can only help " +
+                "with financial-market-related questions.' Do not attempt to answer unrelated queries."
         );
         messageRepo.save(systemMessage);
 
