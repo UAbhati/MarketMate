@@ -31,16 +31,14 @@ export default function ChatSearchInput({ sessionId, onMessageAdded, model, tier
       const aiReply = response.data.content || 'No response';
       onMessageAdded({ role: 'assistant', content: aiReply });
     } catch (err: any) {
-      const raw = err?.response?.data;
-      const msg = raw?.message || raw?.error || '⚠️ Failed to get response.';
 
-      if (msg.includes('financial')) {
+      if (err.response?.status === 422) {
         setPopoverMessage(
           "❌ Please ask financial-market-related questions.\n" +
           "💡 Try: 'Q1 results for TCS' or 'market value of Reliance today'."
         );
       } else {
-        onMessageAdded({ role: 'assistant', content: msg });
+        onMessageAdded({ role: 'assistant', content: "financial-market-related questions Only." });
       }
     } finally {
       setQuery('');

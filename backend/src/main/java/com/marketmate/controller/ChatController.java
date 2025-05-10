@@ -86,8 +86,8 @@ public class ChatController {
                 sessionId, userId, message, model, useRealLLM);
         // 2. Only now enforce domain relevance
         if (!financialRelatedQuestions.isFinancialQuery(message.toLowerCase())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Please ask only financial-market-related questions.");
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Non-financial query");
         }
         // 3. enforce RPM
         rateLimitService.checkAllLimits(
