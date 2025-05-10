@@ -28,23 +28,21 @@ const Chat: React.FC = () => {
 
   return (
     <div className={styles.chatContainer}>
-      <div className={styles.chatMain}>
-        <Header
-          onLogout={handleLogout}
-          onChange={onModelOrTierChange}
-        />
-        <div className="app">
-          <ChatSidebar />
-          <div className="chat-window">
-            {sessionId &&
-              <ChatWindow
-                sessionId={sessionId}
-                messages={messages}
-                setMessages={setMessages}
-              />
-            }
-            {sessionId && <ChatSearchInput />}
-          </div>
+      <Header
+        onLogout={handleLogout}
+        onChange={onModelOrTierChange}
+      />
+      <div className={styles.chatMainArea}>
+        <ChatSidebar />
+        <div className={styles.chatWindow}>
+          {sessionId &&
+            <ChatWindow
+              sessionId={sessionId}
+              messages={messages}
+              setMessages={setMessages}
+            />
+          }
+          {sessionId && <ChatSearchInput />}
         </div>
       </div>
     </div>

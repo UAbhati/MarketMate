@@ -6,6 +6,7 @@ import com.marketmate.model.APIResponse;
 import com.marketmate.repository.ChatSessionRepository;
 import com.marketmate.service.ChatService;
 import com.marketmate.service.RateLimitService;
+import com.marketmate.util.ContextBuilder;
 import com.marketmate.util.FinancialRelatedQuestions;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,21 +93,32 @@ public class ChatController {
             return new APIResponse(reply, 0, 0).getMessage();
         }
 
-        // 1. Build context and call LLM
-        APIResponse aiResp = chatService.buildContextAndCallLLM(
-                sessionId, userId, message, model, useRealLLM);
-        // 2. Only now enforce domain relevance
+        // 1. Estimate prompt tokens from history
+        List<ChatMessage> history = chatService.getHistory(sessionId);
+        List<ChatMessage> context = ContextBuilder.buildWindow(session, history);
+        context.add(new ChatMessage(session, "user", message));
+
+        int estimatedPromptTokens = context.stream()
+                .mapToInt(m -> m.getContent().split("\\s+").length)
+                .sum();
+
+        // 2. Run rate limit check BEFORE LLM call
+        rateLimitService.checkAllLimits(
+            userId,
+            model,
+            estimatedPromptTokens,
+            0 // unknown yet, but completionTokens will be added after
+        );
+
+        // 3. Enforce financial domain
         if (!financialRelatedQuestions.isFinancialQuery(message.toLowerCase())) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
                     "Non-financial query");
         }
-        // 3. enforce RPM
-        rateLimitService.checkAllLimits(
-            userId,
-            model,
-            aiResp.getPromptTokens(),
-            aiResp.getCompletionTokens()
-        );
+
+        // 4. Actually call LLM
+        APIResponse aiResp = chatService.buildContextAndCallLLM(
+        sessionId, userId, message, model, useRealLLM);
         // 4. Save messages + usage
         chatService.saveMessagesAndTrack(
                 session,

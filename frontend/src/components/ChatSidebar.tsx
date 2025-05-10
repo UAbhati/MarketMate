@@ -50,7 +50,7 @@ export default function ChatSidebar() {
         + New Chat
       </button>
       <h3>Chat History</h3>
-      <ul>
+      <ul style={{ listStyle: "none", padding: 0 }}>
         {Array.isArray(sessions) ? (
           sessions.map(s => (
             <li key={s.id}>

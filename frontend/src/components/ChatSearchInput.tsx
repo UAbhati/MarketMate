@@ -3,6 +3,7 @@ import { sendMessage } from "../services/chatService";
 import { ChatMessage, useChatContext } from "../context/ChatContext";
 import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
+import styles from "../pages/chat.module.css";
 
 export default function ChatSearchInput() {
   const { setMessages, model, tier } = useChatContext();
@@ -13,8 +14,13 @@ export default function ChatSearchInput() {
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    console.log("🚀 Send clicked:", message);
     if (!message.trim() || !sessionId) return;
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: message,
+    };
+  
+    setMessages((prev) => [...prev, userMessage]);
     setLoading(true);
 
     try {
@@ -43,9 +49,9 @@ export default function ChatSearchInput() {
   };
 
   return (
-    <div className="p-3 border-t border-gray-200 bg-white">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <label className="text-sm text-gray-700">
+    <div className={styles.searchInputWrapper}>
+      <div className={styles.searchInputHeader}>
+        <label className={styles.checkboxLabel}>
           <input
             type="checkbox"
             checked={useRealLLM}
@@ -54,27 +60,26 @@ export default function ChatSearchInput() {
           />
           Use Real LLM (OpenRouter)
         </label>
-        {loading && <span className="text-sm text-gray-500">Generating response…</span>}
+        {loading && <span className={styles.responseStatus}>Generating response…</span>}
       </div>
-      <div className="flex">
+      <form className={styles.searchInputBox} onSubmit={handleSend}>
         <input
           type="text"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={loading}
-          className="flex-1 border border-gray-300 rounded-l px-3 py-2"
+          className={styles.textInput}
           placeholder="Ask your financial question..."
         />
         <button
-          type="button"
-          onClick={handleSend}
+          type="submit"
           disabled={loading || !sessionId}
-          className="bg-blue-600 text-white px-4 py-2 mx-2 rounded-r"
+          className={styles.sendButton}
         >
-          {loading ? '...' : 'Send'}
+          {loading ? "..." : "Send"}
         </button>
-      </div>
+      </form>
     </div>
   );
 }

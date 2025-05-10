@@ -112,5 +112,26 @@ public class ChatService {
 
         // Record token usage
         usageTracker.recordUsage(userId, model, tier, promptTokens, completionTokens);
+
+        // Count assistant messages
+        long assistantMsgCount = messageRepo.countBySession_IdAndRole(session.getId(), "assistant");
+
+        if (assistantMsgCount > 5 && (session.getSummary() == null || session.getSummary().isEmpty())) {
+            // Generate summary (e.g. from first few assistant messages)
+            List<ChatMessage> firstReplies = messageRepo.findTop5BySession_IdAndRoleOrderByCreatedAtAsc(session.getId(),
+                    "assistant");
+
+            StringBuilder summaryBuilder = new StringBuilder();
+            for (ChatMessage msg : firstReplies) {
+                summaryBuilder.append(msg.getContent(), 0, Math.min(60, msg.getContent().length())).append("... ");
+            }
+
+            session.setSummary(summaryBuilder.toString().trim());
+            sessionRepo.save(session);
+        }
     }
+
+    public List<ChatMessage> getHistory(UUID sessionId) {
+        return messageRepo.findBySession_IdOrderByCreatedAtAsc(sessionId);
+    }    
 }
