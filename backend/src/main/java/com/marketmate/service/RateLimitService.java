@@ -66,7 +66,7 @@ public class RateLimitService {
         }
     }
 
-    /** Throws if the user has exhausted their RPM allowance. */
+    /** Throws if the user has exhausted their limits. */
     public void checkAllLimits(
         String userId,
         String model,
