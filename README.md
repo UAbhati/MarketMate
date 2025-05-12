@@ -72,15 +72,15 @@ spring:
     password: your_pass
 ```
 
-#### 3. Run the backend
+#### 3. Build the backend
 ```bash
 cd backend
-./gradlew bootRun
+gradle build
 ```
 
 Swagger will be available at:
 ```
-http://localhost:8080/swagger-ui.html
+http://localhost:8080/swagger-ui/index.html
 ```
 
 ---
@@ -105,12 +105,12 @@ npm run dev
 
 Visit:
 ```
-http://localhost:5173
+http://localhost:3000
 ```
 
 ---
 
-## 🧪 Testing Features
+## 🧪 Additional Features
 
 - Toggle `useRealLLM=true` in API calls to use OpenRouter
 - Try:
